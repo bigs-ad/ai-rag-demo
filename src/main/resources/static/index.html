@@ -306,7 +306,7 @@
     function applyTheme(theme) {
         const dark = theme === 'dark';
         document.body.dataset.theme = dark ? 'dark' : 'light';
-        themeToggle.innerText = dark ? '☀' : '🌙';
+        themeToggle.textContent = dark ? '☀' : '🌙';
         themeToggle.setAttribute('aria-label', dark ? '切换浅色主题' : '切换深色主题');
         themeToggle.setAttribute('title', dark ? '切换浅色主题' : '切换深色主题');
         localStorage.setItem('theme', theme);
@@ -314,7 +314,7 @@
 
     function setSending(sending) {
         sendBtn.disabled = sending;
-        status.innerText = sending ? '回复中...' : '就绪';
+        status.textContent = sending ? '回复中...' : '就绪';
     }
 
     function scrollToBottom() {
@@ -330,7 +330,7 @@
             <div class="bubble"></div>
         `;
         const bubble = item.querySelector('.bubble');
-        bubble.innerText = text;
+        bubble.textContent = text;
         chat.appendChild(item);
         scrollToBottom();
         return bubble;
@@ -362,32 +362,41 @@
 
         const bubble = createBubble('ai');
         let fullText = '';
+        let streamFinished = false;
         setSending(true);
 
         sse = new EventSource('/stream/chat?message=' + encodeURIComponent(msg));
 
         sse.addEventListener('message', event => {
             fullText += event.data;
-            bubble.innerText = fullText;
+            bubble.textContent = fullText;
             scrollToBottom();
         });
 
         sse.addEventListener('done', () => {
+            streamFinished = true;
             closeStream();
         });
 
         sse.addEventListener('ai-error', event => {
             if (event.data) {
-                bubble.innerText = event.data;
+                bubble.textContent = fullText ? `${fullText}\n\n[错误] ${event.data}` : event.data;
             } else if (!fullText) {
-                bubble.innerText = '连接失败，请确认后端服务和 AI 配置是否正常。';
+                bubble.textContent = '连接失败，请确认后端服务和 AI 配置是否正常。';
+            } else {
+                bubble.textContent = `${fullText}\n\n[连接中断，以上为已收到内容]`;
             }
             closeStream();
         });
 
         sse.onerror = () => {
+            if (streamFinished) {
+                return;
+            }
             if (!fullText) {
-                bubble.innerText = '连接失败，请确认后端服务和 AI 配置是否正常。';
+                bubble.textContent = '连接失败，请确认后端服务和 AI 配置是否正常。';
+            } else {
+                bubble.textContent = `${fullText}\n\n[连接中断，以上为已收到内容]`;
             }
             closeStream();
         };

@@ -46,11 +46,9 @@ public class StreamChatController {
                 .content();
 
         return rawStream
-                .flatMap(content -> Flux.fromStream(
-                        content.codePoints().mapToObj(codePoint -> new String(Character.toChars(codePoint)))))
+                .filter(content -> content != null && !content.isEmpty())
                 .map(content -> event("message", content))
-                .delayElements(Duration.ofMillis(8))
-                .timeout(Duration.ofSeconds(60))
+                .timeout(Duration.ofSeconds(180))
                 .concatWithValues(event("done", "[DONE]"))
                 .onErrorResume(ex -> Flux.just(event("ai-error", "AI 服务暂时不可用：" + ex.getMessage())));
     }
