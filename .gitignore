@@ -2,6 +2,9 @@ HELP.md
 target/
 .m2repo/
 .m2repo-clean/
+.env
+.env.*
+!.env.example
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
